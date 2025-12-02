@@ -1,7 +1,21 @@
 import { Bell, Menu, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AuthService } from "../auth/AuthService";
 
 // @ts-ignore
 function AdminHeader({ onToggle }) {
+  const [admin, setAdmin] = useState({ name: "Admin", email: "admin@college.edu" });
+
+  useEffect(() => {
+    const user = AuthService.getUser();
+    if (user) {
+      setAdmin({
+        name: user.name || "Admin",
+        email: user.email || "admin@college.edu"
+      });
+    }
+  }, []);
+
 return (
 <header className="w-full bg-white border-b px-6 py-3 flex items-center justify-between">
 <div className="flex items-center gap-4">
@@ -28,7 +42,10 @@ return (
 
 <button className="flex items-center gap-2 border px-3 py-1 rounded-full text-sm">
 <img src="/logo192.png" alt="avatar" className="w-6 h-6 rounded-full" />
-Admin
+<div className="flex flex-col text-left">
+<span className="font-medium">{admin.name}</span>
+<span className="text-xs text-gray-500">{admin.email}</span>
+</div>
 </button>
 </div>
 </header>

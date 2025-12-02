@@ -1,13 +1,31 @@
 import { ChevronLeft, ChevronRight, CreditCard, FileBarChart2, HomeIcon, LogOut, PlusCircle, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthService } from "../auth/AuthService";
+
 
 // @ts-ignore
 function AdminSidebar({ collapsed }) {
+  const [adminName, setAdminName] = useState("Admin");
+
+  useEffect(() => {
+    const user = AuthService.getUser();
+    if (user && user.name) {
+      setAdminName(user.name);
+    }
+  }, []);
+
+const navigate = useNavigate();
+
+function handleLogout() {
+  AuthService.logout();
+  navigate("/admin/login");
+}
 return (
 <aside className={`bg-white h-full border-r ${collapsed ? "w-20" : "w-64"} transition-all`}>
 <div className="p-4">
 <div className="mb-6 flex items-center justify-between">
-{!collapsed && <div className="text-lg font-bold text-blue-600">Admin</div>}
+{!collapsed && <div className="text-lg font-bold text-blue-600">{adminName}</div>}
 {collapsed ? <ChevronRight /> : <ChevronLeft />}
 </div>
 
@@ -45,7 +63,7 @@ return (
 
 
 <div className="mt-8 pt-4 border-t">
-<button className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50">
+<button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50">
 <LogOut /> {!collapsed && <span>Logout</span>}
 </button>
 </div>

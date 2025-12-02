@@ -13,7 +13,7 @@ return (
 <Link to="/about" className="hover:text-blue-600">About</Link>
 <Link to="/courses" className="hover:text-blue-600">Courses</Link>
 <Link to="/contact" className="hover:text-blue-600">Contact</Link>
-<Link to="/admin" className="ml-4 px-4 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50">Admin</Link>
+<Link to="/login" className="ml-4 px-4 py-2 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50">Login</Link>
 </nav>
 
 

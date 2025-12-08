@@ -1,10 +1,12 @@
-import { Bell, Menu, User } from "lucide-react";
+import { Bell, LogOut, Menu, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthService } from "../auth/AuthService";
 
 // @ts-ignore
 function StudentHeader({ onToggle }) {
 const [userName, setUserName] = useState("Student");
+const navigate = useNavigate();
 
 useEffect(() => {
 const user = AuthService.getUser();
@@ -12,6 +14,11 @@ if (user && user.name) {
 setUserName(user.name);
 }
 }, []);
+
+const handleLogout = () => {
+  AuthService.logout();
+  navigate("/login");
+};
 
 return (
 <header className="w-full bg-white border-b px-6 py-3 flex items-center justify-between">
@@ -31,6 +38,13 @@ return (
 <User size={16} />
 <span className="text-sm">{userName}</span>
 </div>
+<button 
+  onClick={handleLogout}
+  className="p-2 rounded-md hover:bg-red-50 text-red-600"
+  title="Logout"
+>
+<LogOut size={18} />
+</button>
 </div>
 </header>
 );

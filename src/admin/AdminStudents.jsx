@@ -1,15 +1,27 @@
-import { useState } from "react";
+// @ts-nocheck
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export function AdminStudents() {
-const [students, setStudents] = useState([
-{ id: 1, name: "Rahul Singh", dept: "CSE", status: "Paid" },
-{ id: 2, name: "Priya Patel", dept: "ECE", status: "Pending" },
-]);
+const [students, setStudents] = useState([]);
+
+useEffect(() => {
+// Fetch students from AuthService
+const allStudents = JSON.parse(localStorage.getItem("students")) || [];
+setStudents(allStudents.map((s, index) => ({
+...s,
+id: index + 1,
+status: "Pending" // Default status
+})));
+}, []);
 
 
 function deleteStudent(id) {
 setStudents((s) => s.filter((st) => st.id !== id));
+// Also update localStorage
+const updatedStudents = students.filter(st => st.id !== id);
+const studentsForStorage = updatedStudents.map(({ id, ...rest }) => rest);
+localStorage.setItem("students", JSON.stringify(studentsForStorage));
 }
 
 
@@ -26,22 +38,30 @@ return (
 <thead>
 <tr className="border-b">
 <th className="py-3">Name</th>
+<th>Roll Number</th>
 <th>Department</th>
-<th>Status</th>
+<th>Email</th>
 <th>Action</th>
 </tr>
 </thead>
 <tbody>
-{students.map((s) => (
+{students.length > 0 ? (
+students.map((s) => (
 <tr key={s.id} className="border-b">
 <td className="py-3">{s.name}</td>
+<td>{s.roll}</td>
 <td>{s.dept}</td>
-<td className={s.status === "Paid" ? "text-green-600" : "text-red-600"}>{s.status}</td>
+<td>{s.email}</td>
 <td>
-<button onClick={() => deleteStudent(s.id)} className="text-sm text-red-600">Delete</button>
+<button onClick={() => deleteStudent(s.id)} className="text-sm text-red-600 hover:underline">Delete</button>
 </td>
 </tr>
-))}
+))
+) : (
+<tr>
+<td colSpan="5" className="py-4 text-center text-gray-500">No students added yet</td>
+</tr>
+)}
 </tbody>
 </table>
 </div>

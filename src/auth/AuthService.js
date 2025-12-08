@@ -1,12 +1,24 @@
 // @ts-nocheck
 // Get all registered students
 function getAllStudents() {
-  return JSON.parse(localStorage.getItem("students")) || [];
+  try {
+    const data = localStorage.getItem("students");
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error("Error getting students:", e);
+    return [];
+  }
 }
 
 // Get all admins
 function getAllAdmins() {
-  return JSON.parse(localStorage.getItem("admins")) || [];
+  try {
+    const data = localStorage.getItem("admins");
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error("Error getting admins:", e);
+    return [];
+  }
 }
 
 export const AuthService = {
@@ -20,6 +32,7 @@ export const AuthService = {
 
     students.push(student);
     localStorage.setItem("students", JSON.stringify(students));
+    console.log("Student registered:", student);
 
     return { success: true };
   },
@@ -33,6 +46,7 @@ export const AuthService = {
 
     admins.push(admin);
     localStorage.setItem("admins", JSON.stringify(admins));
+    console.log("Admin registered:", admin);
 
     return { success: true };
   },
@@ -42,9 +56,14 @@ export const AuthService = {
     const students = getAllStudents();
     const user = students.find((s) => s.email === email && s.password === password);
 
-    if (!user) return { success: false, message: "Invalid student credentials" };
+    if (!user) {
+      console.log("Student login failed - invalid credentials");
+      return { success: false, message: "Invalid student credentials" };
+    }
 
-    localStorage.setItem("auth", JSON.stringify({ role: "student", email, name: user.name }));
+    const authData = { role: "student", email, name: user.name };
+    localStorage.setItem("auth", JSON.stringify(authData));
+    console.log("Student logged in. Auth data:", authData);
     return { success: true, user };
   },
 
@@ -53,30 +72,52 @@ export const AuthService = {
     const admins = getAllAdmins();
     const admin = admins.find((s) => s.email === email && s.password === password);
 
-    if (!admin) return { success: false, message: "Invalid admin credentials" };
+    if (!admin) {
+      console.log("Admin login failed - invalid credentials");
+      return { success: false, message: "Invalid admin credentials" };
+    }
 
-    localStorage.setItem("auth", JSON.stringify({ role: "admin", email, name: admin.username }));
+    const authData = { role: "admin", email, name: admin.username };
+    localStorage.setItem("auth", JSON.stringify(authData));
+    console.log("Admin logged in. Auth data:", authData);
     return { success: true, admin };
   },
 
   // ------------------- LOGOUT -------------------
   logout() {
     localStorage.removeItem("auth");
+    console.log("User logged out");
   },
 
   // ------------------- GET CURRENT USER -------------------
   getUser() {
-    return JSON.parse(localStorage.getItem("auth"));
+    try {
+      const data = localStorage.getItem("auth");
+      const user = data ? JSON.parse(data) : null;
+      console.log("getUser() returning:", user);
+      return user;
+    } catch (e) {
+      console.error("Error getting user:", e);
+      return null;
+    }
   },
 
   // ------------------- ROLE CHECK -------------------
   isStudent() {
-    const user = AuthService.getUser();
+    const user = this.getUser();
     return user && user.role === "student";
   },
 
   isAdmin() {
-    const user = AuthService.getUser();
+    const user = this.getUser();
     return user && user.role === "admin";
+  },
+
+  // ------------------- CLEAR ALL DATA (for testing) -------------------
+  clearAllData() {
+    localStorage.removeItem("auth");
+    localStorage.removeItem("students");
+    localStorage.removeItem("admins");
+    console.log("All auth data cleared");
   }
 };

@@ -1,10 +1,12 @@
-import { Bell, Menu, Search } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthService } from "../auth/AuthService";
 
 // @ts-ignore
 function AdminHeader({ onToggle }) {
   const [admin, setAdmin] = useState({ name: "Admin", email: "admin@college.edu" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const user = AuthService.getUser();
@@ -15,6 +17,11 @@ function AdminHeader({ onToggle }) {
       });
     }
   }, []);
+
+  const handleLogout = () => {
+    AuthService.logout();
+    navigate("/admin/login");
+  };
 
 return (
 <header className="w-full bg-white border-b px-6 py-3 flex items-center justify-between">
@@ -46,6 +53,14 @@ return (
 <span className="font-medium">{admin.name}</span>
 <span className="text-xs text-gray-500">{admin.email}</span>
 </div>
+</button>
+
+<button 
+  onClick={handleLogout}
+  className="p-2 rounded-md hover:bg-red-50 text-red-600"
+  title="Logout"
+>
+<LogOut size={18} />
 </button>
 </div>
 </header>

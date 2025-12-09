@@ -14,6 +14,7 @@ import StudentLogin from "./auth/StudentLogin";
 // ADMIN PAGES
 import AdminAddStudent from "./admin/AdminAddStudent";
 import AdminDashboard from "./admin/AdminDashboard";
+import AdminEditStudent from "./admin/AdminEditStudent";
 import AdminFees from "./admin/AdminFees";
 import AdminLayout from "./admin/AdminLayout";
 import AdminReports from "./admin/AdminReports";
@@ -22,13 +23,13 @@ import AdminTransactions from "./admin/AdminTransactions";
 
 // STUDENT PAGES
 import AdminRegister from "./auth/AdminRegister";
-import StudentRegister from "./auth/StudentRegister";
 import NotFound from "./NotFound";
 import StudentDashboard from "./student/StudentDashboard";
 import StudentFees from "./student/StudentFees";
 import StudentLayout from "./student/StudentLayout";
 import StudentPayments from "./student/StudentPayments";
 import StudentProfile from "./student/StudentProfile";
+
 
 export default function MainRouter() {
   return (
@@ -42,7 +43,7 @@ export default function MainRouter() {
         <Route path="/contact" element={<Contact />} />
 
         {/* ------ LOGIN ROUTES ------ */}
-        <Route path="/register" element={<StudentRegister />} />
+        
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/login" element={<StudentLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -58,6 +59,7 @@ export default function MainRouter() {
           <Route path="students/add" element={<AdminAddStudent />} />
           <Route path="fees" element={<AdminFees />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="students/edit/:id" element={<AdminEditStudent />} />
           <Route path="transactions" element={<AdminTransactions />} />
         </Route>
 

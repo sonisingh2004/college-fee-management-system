@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AuthService } from "./AuthService";
 
 export default function StudentLogin() {
@@ -48,10 +48,6 @@ export default function StudentLogin() {
         />
 
         <button className="w-full bg-blue-600 text-white py-3 rounded-lg">Login</button>
-
-        <p className="text-center text-sm mt-3">
-          Not registered? <Link to="/register" className="text-blue-600">Register</Link>
-        </p>
       </form>
     </div>
   );

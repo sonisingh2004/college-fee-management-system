@@ -19,7 +19,7 @@ const navigate = useNavigate();
 
 function handleLogout() {
   AuthService.logout();
-  navigate("/admin/login");
+  navigate("/");
 }
 return (
 <aside className={`bg-white h-full border-r ${collapsed ? "w-20" : "w-64"} transition-all`}>

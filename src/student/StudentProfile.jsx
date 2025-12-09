@@ -1,63 +1,125 @@
+// @ts-nocheck
 import { useEffect, useState } from "react";
 import { AuthService } from "../auth/AuthService";
 
-function StudentProfile() {
-const [student, setStudent] = useState({
-name: "Student Name",
-roll: "N/A",
-dept: "N/A",
-email: "student@college.edu",
-phone: "N/A",
-semester: "N/A",
-section: "N/A",
-gpa: "N/A",
-enrollmentDate: "N/A",
-profileImage: "/logo192.png"
-});
+export default function StudentProfile() {
+  const user = AuthService.getUser();
+  const [student, setStudent] = useState(null);
 
-useEffect(() => {
-const user = AuthService.getUser();
-if (user) {
-setStudent({
-name: user.name || "Student Name",
-roll: "12345", // You can fetch this from a database
-dept: "CSE", // You can fetch this from a database
-email: user.email || "student@college.edu",
-phone: "9876543210", // You can fetch this from a database
-semester: "7", // You can fetch this from a database
-section: "Genius", // You can fetch this from a database
-gpa: "8.8", // You can fetch this from a database
-enrollmentDate: "2022-12-15", // You can fetch this from a database
-profileImage: user.profileImage || "/logo192.png" // Fetch from backend
-});
-}
-}, []);
+  useEffect(() => {
+    const students = JSON.parse(localStorage.getItem("students")) || [];
+    const loggedInStudent = students.find((s) => s.id === user.id);
+    setStudent(loggedInStudent);
+  }, [user.id]);
 
-return (
-<div>
-<h2 className="text-2xl font-bold mb-4">Profile</h2>
-<div className="bg-white p-6 rounded-2xl shadow">
-<div className="flex items-center gap-6 mb-6 pb-6 border-b">
-<img src={student.profileImage} alt="profile" className="w-24 h-24 rounded-full border-4 border-blue-100 object-cover" />
-<div>
-<h3 className="text-xl font-bold">{student.name}</h3>
-<p className="text-gray-500 text-sm">Roll: {student.roll}</p>
-<p className="text-gray-500 text-sm">{student.dept} - Semester {student.semester}</p>
-</div>
-</div>
-<div className="grid grid-cols-2 gap-6">
-<div><div className="text-sm text-gray-500">Name</div><div className="font-medium">{student.name}</div></div>
-<div><div className="text-sm text-gray-500">Roll Number</div><div className="font-medium">{student.roll}</div></div>
-<div><div className="text-sm text-gray-500">Department</div><div className="font-medium">{student.dept}</div></div>
-<div><div className="text-sm text-gray-500">Email</div><div className="font-medium">{student.email}</div></div>
-<div><div className="text-sm text-gray-500">Phone</div><div className="font-medium">{student.phone}</div></div>
-<div><div className="text-sm text-gray-500">Current Semester</div><div className="font-medium">{student.semester}</div></div>
-<div><div className="text-sm text-gray-500">Section</div><div className="font-medium">{student.section}</div></div>
-<div><div className="text-sm text-gray-500">GPA</div><div className="font-medium">{student.gpa}</div></div>
-<div><div className="text-sm text-gray-500">Enrollment Date</div><div className="font-medium">{student.enrollmentDate}</div></div>
-</div>
-</div>
-</div>
-);
+  if (!student) {
+    return (
+      <p className="text-center mt-10 text-gray-600">Loading profile...</p>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">My Profile</h2>
+
+      <div className="bg-white p-6 rounded-2xl shadow max-w-2xl space-y-5">
+
+        {/* PROFILE IMAGE */}
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src={student.profileImage || "/default-avatar.png"}
+            alt="Profile"
+            className="w-32 h-32 rounded-full object-cover border shadow"
+          />
+          <h3 className="text-xl font-semibold mt-3">{student.name}</h3>
+          <p className="text-sm text-gray-500">{student.email}</p>
+        </div>
+
+        <hr />
+
+        {/* BASIC INFO */}
+        <div>
+          <label className="text-sm text-gray-500">Full Name</label>
+          <div className="font-medium text-lg">{student.name}</div>
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-500">Email</label>
+          <div className="font-medium">{student.email}</div>
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-500">Roll Number</label>
+          <div className="font-medium">{student.roll}</div>
+        </div>
+
+        {/* COURSE / BRANCH / YEAR */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-gray-500">Course</label>
+            <div className="font-medium">{student.course}</div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Branch</label>
+            <div className="font-medium">{student.branch}</div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Year / Semester</label>
+            <div className="font-medium">{student.year}</div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Status</label>
+            <div>
+              {student.status === "active" ? (
+                <span className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full">
+                  Active
+                </span>
+              ) : (
+                <span className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-full">
+                  Inactive
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* CONTACT INFORMATION */}
+        <div>
+          <label className="text-sm text-gray-500">Phone Number</label>
+          <div className="font-medium">{student.phone}</div>
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-500">Gender</label>
+          <div className="font-medium">{student.gender}</div>
+        </div>
+
+        <div>
+          <label className="text-sm text-gray-500">Address</label>
+          <div className="font-medium">{student.address}</div>
+        </div>
+
+        {/* PARENT DETAILS */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-gray-500">Parent Name</label>
+            <div className="font-medium">{student.parentName}</div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-500">Parent Contact</label>
+            <div className="font-medium">{student.parentPhone}</div>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg text-blue-700">
+          This information is added by the Admin.  
+          You cannot edit it yourself.
+        </div>
+      </div>
+    </div>
+  );
 }
-export default StudentProfile

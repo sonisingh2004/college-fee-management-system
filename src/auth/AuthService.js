@@ -61,7 +61,7 @@ export const AuthService = {
       return { success: false, message: "Invalid student credentials" };
     }
 
-    const authData = { role: "student", email, name: user.name };
+    const authData = { role: "student", id: user.id };
     localStorage.setItem("auth", JSON.stringify(authData));
     console.log("Student logged in. Auth data:", authData);
     return { success: true, user };

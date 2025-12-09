@@ -1,57 +1,92 @@
-function StudentDashboard() {
-const dues = 15000;
-const lastPayment = { amount: 20000, date: "2025-11-20" };
+// @ts-nocheck
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AuthService } from "../auth/AuthService";
 
+export default function StudentDashboard() {
+  const [fees, setFees] = useState([]);
+  const user = AuthService.getUser(); // { role: 'student', id: 123 }
 
-return (
-<div>
-<h2 className="text-2xl font-bold mb-4">Welcome, Student</h2>
+  useEffect(() => {
+    const allFees = JSON.parse(localStorage.getItem("fees")) || [];
 
+    // filter fees only for this student
+    const studentFees = allFees.filter(f => f.studentId === user.id);
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-<div className="bg-white p-6 rounded-2xl shadow">
-<div className="text-sm text-gray-500">Due Amount</div>
-<div className="text-2xl font-bold mt-2">₹{dues.toLocaleString()}</div>
-</div>
-<div className="bg-white p-6 rounded-2xl shadow">
-<div className="text-sm text-gray-500">Last Payment</div>
-<div className="text-2xl font-bold mt-2">₹{lastPayment.amount.toLocaleString()}</div>
-<div className="text-sm text-gray-500 mt-1">{lastPayment.date}</div>
-</div>
-<div className="bg-white p-6 rounded-2xl shadow">
-<div className="text-sm text-gray-500">Status</div>
-<div className="text-2xl font-bold mt-2 text-green-600">Active</div>
-</div>
-</div>
+    setFees(studentFees);
+  }, []);
 
+  const totalFee = fees.reduce((sum, f) => sum + f.amount, 0);
+  const totalPaid = fees
+    .filter(f => f.status === "Paid")
+    .reduce((sum, f) => sum + f.amount, 0);
+  const totalPending = totalFee - totalPaid;
 
-<div className="bg-white p-6 rounded-2xl shadow">
-<h3 className="font-semibold mb-2">Recent Transactions</h3>
-<table className="w-full text-left text-sm">
-<thead>
-<tr className="border-b">
-<th className="py-2">Description</th>
-<th>Amount</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-<tr className="border-b">
-<td className="py-2">Tuition Fee - Semester 1</td>
-<td>₹20,000</td>
-<td>20 Nov 2025</td>
-</tr>
-<tr>
-<td className="py-2">Library Fee</td>
-<td>₹1,000</td>
-<td>12 Nov 2025</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-);
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Welcome to Your Dashboard</h2>
+
+      {/* Summary cards */}
+      <div className="grid md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white p-6 rounded-2xl shadow">
+          <p className="text-sm text-gray-500">Total Fees</p>
+          <p className="text-2xl font-bold mt-2">₹{totalFee.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow">
+          <p className="text-sm text-gray-500">Paid Amount</p>
+          <p className="text-2xl font-bold mt-2 text-green-600">
+            ₹{totalPaid.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow">
+          <p className="text-sm text-gray-500">Pending Amount</p>
+          <p className="text-2xl font-bold mt-2 text-red-600">
+            ₹{totalPending.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Recent Fee Notifications */}
+      <div className="bg-white p-6 rounded-2xl shadow">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Recent Fee Notices</h3>
+          <Link to="/student/fees" className="text-blue-600 text-sm">
+            View All
+          </Link>
+        </div>
+
+        {fees.length === 0 ? (
+          <p className="text-gray-500">No fees assigned yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {fees.slice(0, 3).map(fee => (
+              <div
+                key={fee.id}
+                className="flex justify-between items-center p-3 border rounded-lg"
+              >
+                <div>
+                  <p className="font-medium">{fee.title}</p>
+                  <p className="text-gray-600 text-sm">
+                    Due: {fee.dueDate || "N/A"}
+                  </p>
+                </div>
+
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    fee.status === "Paid"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {fee.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
-
-
-export default StudentDashboard;

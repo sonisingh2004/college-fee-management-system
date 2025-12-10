@@ -69,18 +69,15 @@ export const AuthService = {
 
   // ------------------- ADMIN LOGIN -------------------
   loginAdmin(email, password) {
-    const admins = getAllAdmins();
-    const admin = admins.find((s) => s.email === email && s.password === password);
-
-    if (!admin) {
-      console.log("Admin login failed - invalid credentials");
-      return { success: false, message: "Invalid admin credentials" };
+    // Only allow the single admin credentials
+    if (email === 'admin@gmail.com' && password === 'admin123') {
+      const authData = { role: "admin", email, name: "Admin" };
+      localStorage.setItem("auth", JSON.stringify(authData));
+      console.log("Admin logged in. Auth data:", authData);
+      return { success: true };
     }
-
-    const authData = { role: "admin", email, name: admin.username };
-    localStorage.setItem("auth", JSON.stringify(authData));
-    console.log("Admin logged in. Auth data:", authData);
-    return { success: true, admin };
+    console.log("Admin login failed - invalid credentials");
+    return { success: false, message: "Invalid admin credentials" };
   },
 
   // ------------------- LOGOUT -------------------

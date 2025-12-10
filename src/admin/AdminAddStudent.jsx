@@ -1,6 +1,9 @@
 // @ts-nocheck
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AdminAddStudent() {
   const navigate = useNavigate();
@@ -22,6 +25,7 @@ export default function AdminAddStudent() {
   });
 
   const [profileImage, setProfileImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // ------------------------------------------------------
   // IMAGE COMPRESSOR (Same as Edit Page for consistency)
@@ -79,7 +83,7 @@ export default function AdminAddStudent() {
     const students = JSON.parse(localStorage.getItem("students")) || [];
 
     if (students.find((s) => s.email === student.email)) {
-      alert("Email already exists!");
+      toast.error("Email already exists!");
       return;
     }
 
@@ -97,8 +101,8 @@ export default function AdminAddStudent() {
 
     localStorage.setItem("students", JSON.stringify([...students, newStudent]));
 
-    alert("Student added successfully!");
-    navigate("/admin/students");
+    toast.success("Student added successfully!");
+    setTimeout(() => navigate("/admin/students"), 1500);
   }
 
   // ------------------------------------------------------
@@ -159,15 +163,24 @@ export default function AdminAddStudent() {
           {/* PASSWORD */}
           <div>
             <label className="text-sm">Password</label>
-            <input
-              type="password"
-              required
-              className="w-full border p-2 rounded-lg"
-              value={student.password}
-              onChange={(e) =>
-                setStudent({ ...student, password: e.target.value })
-              }
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                className="w-full border p-2 pr-10 rounded-lg"
+                value={student.password}
+                onChange={(e) =>
+                  setStudent({ ...student, password: e.target.value })
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           {/* ROLL */}
@@ -185,15 +198,21 @@ export default function AdminAddStudent() {
           {/* COURSE */}
           <div>
             <label className="text-sm">Course</label>
-            <input
-              type="text"
+            <select
               required
               className="w-full border p-2 rounded-lg"
               value={student.course}
               onChange={(e) =>
                 setStudent({ ...student, course: e.target.value })
               }
-            />
+            >
+              <option value="">Select Course</option>
+              <option value="B.Tech">B.Tech</option>
+              <option value="M.Tech">M.Tech</option>
+              <option value="MCA">MCA</option>
+              <option value="M.A">M.A</option>
+              <option value="Diploma">Diploma</option>
+            </select>
           </div>
 
           {/* BRANCH */}
@@ -219,7 +238,7 @@ export default function AdminAddStudent() {
 
           {/* YEAR */}
           <div>
-            <label className="text-sm">Year / Semester</label>
+            <label className="text-sm">Semester</label>
             <input
               type="text"
               required
@@ -318,6 +337,19 @@ export default function AdminAddStudent() {
           Add Student
         </button>
       </form>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

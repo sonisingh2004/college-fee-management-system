@@ -1,6 +1,36 @@
 // @ts-nocheck
 import { useEffect, useState } from "react";
 
+// Initialize IndexedDB for retrieving payment proofs
+function initializeDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("FeeManagementDB", 1);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("paymentProofs")) {
+        db.createObjectStore("paymentProofs", { keyPath: "feeId" });
+      }
+    };
+  });
+}
+
+// Retrieve proof from IndexedDB
+async function getProofFromIndexedDB(feeId) {
+  const db = await initializeDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["paymentProofs"], "readonly");
+    const store = transaction.objectStore("paymentProofs");
+    const request = store.get(feeId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result?.proof || null);
+  });
+}
+
 export function AdminFees() {
   const [students, setStudents] = useState([]);
   const [previewProof, setPreviewProof] = useState(null);
@@ -24,6 +54,8 @@ export function AdminFees() {
     amount: "",
     dueDate: "",
     studentId: "all",
+    course: "all",
+    semester: "all",
   });
 
   function handleChange(e) {
@@ -31,6 +63,15 @@ export function AdminFees() {
       ...prev,
       [e.target.name]: e.target.value,
     }));
+  }
+
+  // Filter students based on course and semester
+  function getFilteredStudents() {
+    return students.filter((s) => {
+      if (form.course !== "all" && s.course !== form.course) return false;
+      if (form.semester !== "all" && s.year !== form.semester) return false;
+      return true;
+    });
   }
 
   function handleCreateFee(e) {
@@ -41,13 +82,20 @@ export function AdminFees() {
     let newFees = [];
 
     if (form.studentId === "all") {
-      newFees = students.map((s) => ({
+      // If assigning to all, use filtered students based on course/semester
+      const targetStudents = form.course !== "all" || form.semester !== "all" 
+        ? getFilteredStudents() 
+        : students;
+      
+      newFees = targetStudents.map((s) => ({
         id: Date.now() + "-" + s.id,
         studentId: s.id,
         student: s.name,
         title: form.title,
         amount: amountNumber,
         dueDate: form.dueDate,
+        course: s.course,
+        semester: s.year,
         status: "Pending",
         proof: null,
       }));
@@ -61,6 +109,8 @@ export function AdminFees() {
           title: form.title,
           amount: amountNumber,
           dueDate: form.dueDate,
+          course: s.course,
+          semester: s.year,
           status: "Pending",
           proof: null,
         },
@@ -68,7 +118,7 @@ export function AdminFees() {
     }
 
     setFees((prev) => [...prev, ...newFees]);
-    setForm({ title: "", amount: "", dueDate: "", studentId: "all" });
+    setForm({ title: "", amount: "", dueDate: "", studentId: "all", course: "all", semester: "all" });
     alert("Fee created successfully!");
   }
 
@@ -137,6 +187,43 @@ export function AdminFees() {
           </div>
 
           <div>
+            <label className="text-sm font-medium">Course</label>
+            <select
+              name="course"
+              value={form.course}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-lg mt-1"
+            >
+              <option value="all">All Courses</option>
+              <option value="B.Tech">B.Tech</option>
+              <option value="M.Tech">M.Tech</option>
+              <option value="MCA">MCA</option>
+              <option value="M.A">M.A</option>
+              <option value="Diploma">Diploma</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Semester</label>
+            <select
+              name="semester"
+              value={form.semester}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-lg mt-1"
+            >
+              <option value="all">All Semesters</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select>
+          </div>
+
+          <div>
             <label className="text-sm font-medium">Assign To</label>
             <select
               name="studentId"
@@ -144,10 +231,10 @@ export function AdminFees() {
               onChange={handleChange}
               className="w-full border p-2 rounded-lg mt-1"
             >
-              <option value="all">All Students</option>
-              {students.map((s) => (
+              <option value="all">All Students{form.course !== "all" || form.semester !== "all" ? ` (${getFilteredStudents().length})` : ""}</option>
+              {getFilteredStudents().map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.name}
+                  {s.name} ({s.course} - Sem {s.year})
                 </option>
               ))}
             </select>
@@ -196,15 +283,20 @@ export function AdminFees() {
                 </td>
 
                 <td>
-                  {f.proof ? (
+                  {f.status === "Verification Pending" && (
                     <button
-                      onClick={() => setPreviewProof(f.proof)}
+                      onClick={async () => {
+                        const proof = await getProofFromIndexedDB(f.id);
+                        if (proof) {
+                          setPreviewProof(proof);
+                        } else {
+                          alert("No proof found for this fee.");
+                        }
+                      }}
                       className="text-blue-600 underline"
                     >
                       View Proof
                     </button>
-                  ) : (
-                    "--"
                   )}
                 </td>
 

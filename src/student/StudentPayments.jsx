@@ -2,6 +2,49 @@
 import { useEffect, useState } from "react";
 import { AuthService } from "../auth/AuthService";
 
+// Initialize IndexedDB for storing payment proofs
+function initializeDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("FeeManagementDB", 1);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("paymentProofs")) {
+        db.createObjectStore("paymentProofs", { keyPath: "feeId" });
+      }
+    };
+  });
+}
+
+// Save proof to IndexedDB
+async function saveProofToIndexedDB(feeId, proofData) {
+  const db = await initializeDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["paymentProofs"], "readwrite");
+    const store = transaction.objectStore("paymentProofs");
+    const request = store.put({ feeId, proof: proofData });
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+// Retrieve proof from IndexedDB
+async function getProofFromIndexedDB(feeId) {
+  const db = await initializeDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(["paymentProofs"], "readonly");
+    const store = transaction.objectStore("paymentProofs");
+    const request = store.get(feeId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result?.proof || null);
+  });
+}
+
 export default function StudentPayments() {
   const user = AuthService.getUser();
   const [fees, setFees] = useState([]);
@@ -33,33 +76,41 @@ export default function StudentPayments() {
       return;
     }
 
-    fileToBase64(proofFile, (base64, mimeType) => {
+    fileToBase64(proofFile, async (base64, mimeType) => {
       // Ensure correct MIME formatting
       const cleanedBase64 = base64.startsWith("data:")
         ? base64
         : `data:${mimeType};base64,${base64.split(",")[1]}`;
 
-      const updatedFees = fees.map((fee) =>
-        fee.id === selectedFee.id
-          ? { ...fee, status: "Verification Pending", proof: cleanedBase64 }
-          : fee
-      );
+      // Save proof to IndexedDB instead of localStorage
+      try {
+        await saveProofToIndexedDB(selectedFee.id, cleanedBase64);
 
-      setFees(updatedFees);
+        const updatedFees = fees.map((fee) =>
+          fee.id === selectedFee.id
+            ? { ...fee, status: "Verification Pending" }
+            : fee
+        );
 
-      // Update in global localStorage
-      const allFees = JSON.parse(localStorage.getItem("fees")) || [];
-      const updatedAll = allFees.map((fee) =>
-        fee.id === selectedFee.id
-          ? { ...fee, status: "Verification Pending", proof: cleanedBase64 }
-          : fee
-      );
+        setFees(updatedFees);
 
-      localStorage.setItem("fees", JSON.stringify(updatedAll));
+        // Update in global localStorage (without the base64 proof)
+        const allFees = JSON.parse(localStorage.getItem("fees")) || [];
+        const updatedAll = allFees.map((fee) =>
+          fee.id === selectedFee.id
+            ? { ...fee, status: "Verification Pending" }
+            : fee
+        );
 
-      alert("Proof submitted! Waiting for admin approval.");
-      setSelectedFee(null);
-      setProofFile(null);
+        localStorage.setItem("fees", JSON.stringify(updatedAll));
+
+        alert("Proof submitted! Waiting for admin approval.");
+        setSelectedFee(null);
+        setProofFile(null);
+      } catch (error) {
+        console.error("Error saving proof:", error);
+        alert("Failed to save proof. Please try again.");
+      }
     });
   }
 

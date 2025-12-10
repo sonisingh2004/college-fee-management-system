@@ -1,6 +1,9 @@
 // @ts-nocheck
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AdminEditStudent() {
   const { id } = useParams();
@@ -8,6 +11,7 @@ export default function AdminEditStudent() {
 
   const [student, setStudent] = useState(null);
   const [newProfileImage, setNewProfileImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // ----------------------------------------
   // IMAGE COMPRESSOR FUNCTION
@@ -65,8 +69,8 @@ export default function AdminEditStudent() {
     const found = students.find((s) => s.id === Number(id));
 
     if (!found) {
-      alert("Student not found!");
-      navigate("/admin/students");
+      toast.error("Student not found!");
+      setTimeout(() => navigate("/admin/students"), 1500);
       return;
     }
 
@@ -94,8 +98,8 @@ export default function AdminEditStudent() {
 
     localStorage.setItem("students", JSON.stringify(updatedList));
 
-    alert("Student updated successfully!");
-    navigate("/admin/students");
+    toast.success("Student updated successfully!");
+    setTimeout(() => navigate("/admin/students"), 1500);
   }
 
   if (!student)
@@ -158,12 +162,23 @@ export default function AdminEditStudent() {
         {/* PASSWORD */}
         <div>
           <label className="text-sm">Password</label>
-          <input
-            type="text"
-            className="w-full border p-2 rounded-lg"
-            value={student.password}
-            onChange={(e) => setStudent({ ...student, password: e.target.value })}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="w-full border p-2 pr-10 rounded-lg"
+              value={student.password}
+              onChange={(e) =>
+                setStudent({ ...student, password: e.target.value })
+              }
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* ROLL NUMBER */}
@@ -180,12 +195,20 @@ export default function AdminEditStudent() {
         {/* COURSE */}
         <div>
           <label className="text-sm">Course</label>
-          <input
-            type="text"
+          <select
             className="w-full border p-2 rounded-lg"
             value={student.course}
-            onChange={(e) => setStudent({ ...student, course: e.target.value })}
-          />
+            onChange={(e) =>
+              setStudent({ ...student, course: e.target.value })
+            }
+          >
+            <option value="">Select Course</option>
+            <option value="B.Tech">B.Tech</option>
+            <option value="M.Tech">M.Tech</option>
+            <option value="MCA">MCA</option>
+            <option value="M.A">M.A</option>
+            <option value="Diploma">Diploma</option>
+          </select>
         </div>
 
         {/* BRANCH */}
@@ -299,6 +322,19 @@ export default function AdminEditStudent() {
           Update Student
         </button>
       </form>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

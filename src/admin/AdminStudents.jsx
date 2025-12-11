@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -9,11 +11,11 @@ export default function AdminStudents() {
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
 
- useEffect(() => {
-  const data = JSON.parse(localStorage.getItem("students")) || [];
-  setStudents(data);
-  setFiltered(data);
-}, [localStorage.getItem("students")]);
+  useEffect(() => {
+    const data = JSON.parse(localStorage.getItem("students")) || [];
+    setStudents(data);
+    setFiltered(data);
+  }, [localStorage.getItem("students")]);
 
   // Search + Filters
   useEffect(() => {
@@ -36,14 +38,28 @@ export default function AdminStudents() {
   }, [search, courseFilter, students]);
 
   function handleDelete(id) {
-    if (!confirm("Are you sure you want to delete this student?")) return;
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this student? This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return; // User cancelled, do nothing
+    }
 
     const updated = students.filter((s) => s.id !== id);
     setStudents(updated);
     setFiltered(updated);
     localStorage.setItem("students", JSON.stringify(updated));
 
-    alert("Student deleted successfully!");
+    toast.success("Student deleted successfully!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   }
 
   const uniqueCourses = [...new Set(students.map((s) => s.course))];

@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Initialize IndexedDB for retrieving payment proofs
 function initializeDB() {
@@ -76,10 +78,27 @@ export function AdminFees() {
 
   function handleCreateFee(e) {
     e.preventDefault();
-    const amountNumber = Number(form.amount);
-    if (!form.title || !form.amount) return;
+    
+    // Better validation
+    if (!form.title.trim()) {
+      toast.error("Please enter a fee title!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
+    
+    if (!form.amount || Number(form.amount) <= 0) {
+      toast.error("Please enter a valid amount!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      return;
+    }
 
+    const amountNumber = Number(form.amount);
     let newFees = [];
+    const baseTimestamp = Date.now();
 
     if (form.studentId === "all") {
       // If assigning to all, use filtered students based on course/semester
@@ -87,8 +106,16 @@ export function AdminFees() {
         ? getFilteredStudents() 
         : students;
       
-      newFees = targetStudents.map((s) => ({
-        id: Date.now() + "-" + s.id,
+      if (targetStudents.length === 0) {
+        toast.warning("No students found matching the selected filters!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
+      
+      newFees = targetStudents.map((s, index) => ({
+        id: `${baseTimestamp}-${s.id}-${index}`,
         studentId: s.id,
         student: s.name,
         title: form.title,
@@ -101,9 +128,16 @@ export function AdminFees() {
       }));
     } else {
       const s = students.find((st) => st.id === Number(form.studentId));
+      if (!s) {
+        toast.error("Student not found!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+        return;
+      }
       newFees = [
         {
-          id: Date.now(),
+          id: `${baseTimestamp}-${s.id}`,
           studentId: s.id,
           student: s.name,
           title: form.title,
@@ -119,7 +153,15 @@ export function AdminFees() {
 
     setFees((prev) => [...prev, ...newFees]);
     setForm({ title: "", amount: "", dueDate: "", studentId: "all", course: "all", semester: "all" });
-    alert("Fee created successfully!");
+    
+    // Toast AFTER state update
+    setTimeout(() => {
+      toast.success(`Fee created successfully for ${newFees.length} student(s)!`, {
+        position: "top-right",
+        autoClose: 3000,
+        toastId: `fee-create-${baseTimestamp}`,
+      });
+    }, 100);
   }
 
   function approvePayment(id) {
@@ -128,7 +170,12 @@ export function AdminFees() {
     );
     setFees(updated);
     localStorage.setItem("fees", JSON.stringify(updated));
-    alert("Payment Approved");
+    
+    toast.success("Payment approved successfully!", {
+      position: "top-right",
+      autoClose: 3000,
+      toastId: `approve-${id}`, // Unique toast ID
+    });
   }
 
   function rejectPayment(id) {
@@ -137,7 +184,12 @@ export function AdminFees() {
     );
     setFees(updated);
     localStorage.setItem("fees", JSON.stringify(updated));
-    alert("Payment Rejected");
+    
+    toast.error("Payment rejected!", {
+      position: "top-right",
+      autoClose: 3000,
+      toastId: `reject-${id}`, // Unique toast ID
+    });
   }
 
   return (
@@ -290,7 +342,10 @@ export function AdminFees() {
                         if (proof) {
                           setPreviewProof(proof);
                         } else {
-                          alert("No proof found for this fee.");
+                          toast.warning("No proof found for this fee.", {
+                            position: "top-right",
+                            autoClose: 3000,
+                          });
                         }
                       }}
                       className="text-blue-600 underline"
